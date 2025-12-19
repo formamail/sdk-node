@@ -109,12 +109,12 @@ npm run lint
 Add to `.github/workflows/publish.yml`:
 
 ```yaml
-name: Publish SDK
+name: Publish to npm
 
 on:
   push:
     tags:
-      - 'sdk-node-v*'
+      - 'v*'
 
 jobs:
   publish:
@@ -129,19 +129,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        working-directory: integrations/sdk-node
         run: npm ci
 
       - name: Build
-        working-directory: integrations/sdk-node
         run: npm run build
 
       - name: Test
-        working-directory: integrations/sdk-node
         run: npm test
 
       - name: Publish
-        working-directory: integrations/sdk-node
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
