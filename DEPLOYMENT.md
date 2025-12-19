@@ -1,17 +1,17 @@
 # Node.js SDK Deployment Guide
 
-This guide covers publishing and maintaining the FormaMail Node.js SDK (`@formamail/sdk`).
+This guide covers publishing and maintaining the FormaMail Node.js SDK (`formamail`).
 
 ## Prerequisites
 
 - Node.js 18.x or higher
-- npm account with publish access to `@formamail` scope
+- npm account with publish access to `forma-mail` organization
 - GitHub repository access
 
 ## Package Overview
 
 ```
-@formamail/sdk
+formamail
 ├── src/
 │   ├── client.ts        # Main Formamail client
 │   ├── index.ts         # Public exports
@@ -60,18 +60,18 @@ npm run lint
 ### Initial Setup
 
 1. **Create npm Organization** (if not exists):
-   ```bash
-   npm org create formamail
-   ```
+   - Go to [npmjs.com/org/create](https://www.npmjs.com/org/create)
+   - Create organization named `forma-mail`
+   - Add team members with appropriate roles
 
 2. **Login to npm**:
    ```bash
    npm login
    ```
 
-3. **Verify Scope Access**:
+3. **Verify Organization Membership**:
    ```bash
-   npm access ls-packages
+   npm org ls forma-mail
    ```
 
 ### Publishing a New Version
@@ -189,7 +189,7 @@ FORMAMAIL_API_KEY=your_api_key
 ### SDK Configuration
 
 ```typescript
-import { Formamail } from '@formamail/sdk';
+import { Formamail } from 'formamail';
 
 const client = new Formamail({
   apiKey: process.env.FORMAMAIL_API_KEY,
@@ -248,7 +248,7 @@ npm run test:integration
 ### Manual Testing
 
 ```typescript
-import { Formamail } from '@formamail/sdk';
+import { Formamail } from 'formamail';
 
 const client = new Formamail({
   apiKey: 'your_test_key',
@@ -261,7 +261,7 @@ console.log('Authenticated as:', user.email);
 
 // Test email sending
 const result = await client.emails.send({
-  templateId: 'tmpl_test',
+  templateId: 'welcome-email',
   to: 'test@example.com',
   variables: { name: 'Test' },
 });

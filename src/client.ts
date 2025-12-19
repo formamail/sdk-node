@@ -28,7 +28,7 @@ export class Formamail {
    *
    * @example
    * ```typescript
-   * import { Formamail } from '@formamail/sdk';
+   * import { Formamail } from 'formamail';
    *
    * const formamail = new Formamail({
    *   apiKey: process.env.FORMAMAIL_API_KEY!,
@@ -36,7 +36,7 @@ export class Formamail {
    *
    * // Send an email
    * const result = await formamail.emails.send({
-   *   templateId: 'tmpl_welcome',
+   *   templateId: 'welcome-email',
    *   to: 'customer@example.com',
    *   variables: { firstName: 'John' },
    * });
@@ -99,7 +99,7 @@ export class Formamail {
  *
  * @example
  * ```typescript
- * import { createClient } from '@formamail/sdk';
+ * import { createClient } from 'formamail';
  *
  * const formamail = createClient({
  *   apiKey: process.env.FORMAMAIL_API_KEY!,

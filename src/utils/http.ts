@@ -44,7 +44,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${this.config.apiKey}`,
-      'User-Agent': '@formamail/sdk/1.0.0',
+      'User-Agent': 'formamail-node/1.0.0',
       ...this.config.headers,
     };
 

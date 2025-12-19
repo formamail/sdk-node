@@ -5,7 +5,7 @@
  *
  * @example
  * ```typescript
- * import { Formamail } from '@formamail/sdk';
+ * import { Formamail } from 'formamail';
  *
  * const formamail = new Formamail({
  *   apiKey: process.env.FORMAMAIL_API_KEY!,
@@ -13,17 +13,18 @@
  *
  * // Send an email
  * const result = await formamail.emails.send({
- *   templateId: 'tmpl_welcome',
+ *   templateId: 'welcome-email',
  *   to: 'customer@example.com',
  *   variables: { firstName: 'John' },
  * });
  *
  * // Send email with PDF attachment
- * const invoice = await formamail.emails.sendWithPdf({
- *   templateId: 'tmpl_invoice_email',
+ * const invoice = await formamail.emails.sendWithAttachment({
+ *   templateId: 'invoice-email',
  *   to: 'customer@example.com',
- *   pdfTemplateId: 'tmpl_invoice_pdf',
- *   pdfFileName: 'Invoice-001',
+ *   attachmentTemplateId: 'invoice-pdf',
+ *   attachmentType: 'pdf',
+ *   fileName: 'Invoice-001',
  *   variables: { invoiceNumber: 'INV-001' },
  * });
  *
@@ -31,7 +32,7 @@
  * const { data: templates } = await formamail.templates.list({ type: 'email' });
  *
  * // Verify webhook signature
- * import { verifyWebhookSignature } from '@formamail/sdk';
+ * import { verifyWebhookSignature } from 'formamail';
  *
  * const event = verifyWebhookSignature({
  *   payload: requestBody,

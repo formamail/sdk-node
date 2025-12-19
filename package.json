@@ -43,6 +43,10 @@
   "bugs": {
     "url": "https://github.com/formamail/sdk-node/issues"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

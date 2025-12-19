@@ -61,16 +61,17 @@ export function computeSignature(
  *
  * @example
  * ```typescript
- * import { verifyWebhookSignature } from '@formamail/sdk';
+ * import { verifyWebhookSignature } from 'formamail';
  *
- * app.post('/webhooks/formamail', (req, res) => {
- *   const signature = req.headers['x-formamail-signature'];
+ * // Use express.raw() middleware for webhook routes
+ * app.post('/webhooks/formamail', express.raw({ type: 'application/json' }), (req, res) => {
+ *   const signature = req.headers['x-formamail-signature'] as string;
  *
  *   try {
  *     const event = verifyWebhookSignature({
- *       payload: req.body, // raw body string
+ *       payload: req.body.toString(), // raw body as string
  *       signature,
- *       secret: process.env.WEBHOOK_SECRET,
+ *       secret: process.env.WEBHOOK_SECRET!,
  *     });
  *
  *     // Process the verified event

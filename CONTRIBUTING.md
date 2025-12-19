@@ -165,7 +165,7 @@ This automatically:
 
 ### Prerequisites
 
-1. You must be a member of the `@formamail` npm organization
+1. You must be a member of the `forma-mail` npm organization
 2. You must be logged in to npm: `npm login`
 3. You must have 2FA enabled on your npm account
 
@@ -300,7 +300,7 @@ After PR approval:
 ### npm publish fails with 403
 
 - Ensure you're logged in: `npm whoami`
-- Ensure you have publish access to `@formamail` org
+- Ensure you have publish access to `forma-mail` org
 - Ensure 2FA is enabled and you're providing the OTP
 
 ### Build fails
