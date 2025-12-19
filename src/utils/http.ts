@@ -2,7 +2,7 @@
  * HTTP Client for FormaMail SDK
  */
 
-import type { ApiResponse, ApiError } from '../types';
+import type { ApiError } from '../types';
 
 export interface HttpClientConfig {
   baseUrl: string;
