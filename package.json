@@ -1,5 +1,5 @@
 {
-  "name": "@formamail/sdk",
+  "name": "formamail",
   "version": "1.0.0",
   "description": "Official Node.js SDK for FormaMail - Send emails with dynamically generated PDF and Excel attachments",
   "main": "dist/index.js",

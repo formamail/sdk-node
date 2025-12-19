@@ -1,4 +1,4 @@
-# Contributing to @formamail/sdk (Node.js)
+# Contributing to formamail (Node.js)
 
 This guide covers how to develop, test, and publish the FormaMail Node.js SDK.
 
@@ -201,7 +201,7 @@ git push origin main --tags
 npm publish --access public
 
 # 7. Verify on npm
-open https://www.npmjs.com/package/@formamail/sdk
+open https://www.npmjs.com/package/formamail
 ```
 
 ### Automated Publishing (CI/CD)

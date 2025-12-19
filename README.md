@@ -1,21 +1,21 @@
-# @formamail/sdk
+# formamail
 
 Official Node.js SDK for FormaMail - the email delivery platform with unified template design for emails and attachments.
 
 ## Installation
 
 ```bash
-npm install @formamail/sdk
+npm install formamail
 # or
-yarn add @formamail/sdk
+yarn add formamail
 # or
-pnpm add @formamail/sdk
+pnpm add formamail
 ```
 
 ## Quick Start
 
 ```typescript
-import { Formamail } from '@formamail/sdk';
+import { Formamail } from 'formamail';
 
 const formamail = new Formamail({
   apiKey: process.env.FORMAMAIL_API_KEY!,
@@ -23,9 +23,8 @@ const formamail = new Formamail({
 
 // Send an email
 const result = await formamail.emails.send({
-  templateId: 'tmpl_welcome',
+  templateId: 'welcome-email',  // Can be UUID, shortId (etpl_xxx), or slug
   to: 'customer@example.com',
-  toName: 'John Doe',
   variables: {
     firstName: 'John',
     accountId: '12345',
@@ -47,33 +46,74 @@ console.log('Email sent:', result.id);
 
 ## Usage Examples
 
-### Send Email with PDF Attachment
+### Multiple Recipients with CC/BCC
+
+The `to`, `cc`, and `bcc` fields accept flexible input formats:
 
 ```typescript
-const result = await formamail.emails.sendWithPdf({
-  templateId: 'tmpl_invoice_email',
-  to: 'customer@example.com',
-  pdfTemplateId: 'tmpl_invoice_pdf',
-  pdfFileName: 'Invoice-001',
-  variables: {
-    invoiceNumber: 'INV-001',
-    customerName: 'John Doe',
-    total: 99.99,
-  },
+// Simple string (single recipient)
+await formamail.emails.send({
+  templateId: 'welcome-email',
+  to: 'john@example.com',
+  variables: { name: 'John' },
+});
+
+// Object with name
+await formamail.emails.send({
+  templateId: 'welcome-email',
+  to: { email: 'john@example.com', name: 'John Doe' },
+  variables: { name: 'John' },
+});
+
+// Array of recipients (mixed formats)
+await formamail.emails.send({
+  templateId: 'team-update',
+  to: [
+    { email: 'john@example.com', name: 'John Doe' },
+    'jane@example.com',  // Name is optional
+    { email: 'bob@example.com', name: 'Bob Smith' },
+  ],
+  variables: { teamName: 'Engineering' },
+});
+
+// With CC and BCC
+await formamail.emails.send({
+  templateId: 'invoice-email',
+  to: { email: 'customer@example.com', name: 'Customer' },
+  cc: 'accounts@customer.com',  // CC the customer's accounts team
+  bcc: [
+    'audit@yourcompany.com',  // Internal audit copy
+    { email: 'manager@yourcompany.com', name: 'Sales Manager' },
+  ],
+  variables: { invoiceNumber: 'INV-001' },
 });
 ```
 
-### Send Email with Excel Attachment
+### Send Email with Attachment (PDF or Excel)
 
 ```typescript
-const result = await formamail.emails.sendWithExcel({
-  templateId: 'tmpl_report_email',
+// Send with PDF attachment
+const result = await formamail.emails.sendWithAttachment({
+  templateId: 'invoice-email',
+  to: 'customer@example.com',
+  attachmentTemplateId: 'invoice-pdf',
+  attachmentType: 'pdf',
+  fileName: 'Invoice-001',
+  variables: {
+    invoiceNumber: 'INV-001',
+    customerName: 'John Doe',
+  },
+});
+
+// Send with Excel attachment
+const result = await formamail.emails.sendWithAttachment({
+  templateId: 'report-email',
   to: 'manager@example.com',
-  excelTemplateId: 'tmpl_monthly_report',
-  excelFileName: 'Monthly-Report-Jan',
+  attachmentTemplateId: 'monthly-report-excel',
+  attachmentType: 'excel',
+  fileName: 'Monthly-Report-Jan',
   variables: {
     reportMonth: 'January 2025',
-    data: [...],
   },
 });
 ```
@@ -81,20 +121,76 @@ const result = await formamail.emails.sendWithExcel({
 ### Send Bulk Emails
 
 ```typescript
+// Simple bulk send
 const result = await formamail.emails.sendBulk({
-  templateId: 'tmpl_newsletter',
+  templateId: 'newsletter',
   recipients: [
-    { email: 'user1@example.com', name: 'User 1', variables: { firstName: 'User' } },
-    { email: 'user2@example.com', name: 'User 2', variables: { firstName: 'User' } },
+    { email: 'user1@example.com', name: 'User 1', variables: { firstName: 'Alice' } },
+    { email: 'user2@example.com', name: 'User 2', variables: { firstName: 'Bob' } },
   ],
-  commonVariables: {
-    companyName: 'Acme Corp',
-    unsubscribeUrl: 'https://example.com/unsubscribe',
-  },
+  baseVariables: { companyName: 'Acme Corp' },  // Shared across all
+  tags: ['newsletter', 'monthly'],
 });
 
 console.log('Batch ID:', result.batchId);
-console.log('Total recipients:', result.totalRecipients);
+```
+
+### Bulk Send with Personalized Attachments
+
+There are two ways to personalize attachments in bulk sends:
+
+**Option 1: Using `recipientVariableFields`** - Specify which recipient variable fields to use for attachments
+
+```typescript
+const invoiceResult = await formamail.emails.sendBulk({
+  templateId: 'invoice-email',
+  recipients: [
+    { email: 'c1@example.com', variables: { name: 'Alice', invoiceNumber: 'INV-001', amount: 100 } },
+    { email: 'c2@example.com', variables: { name: 'Bob', invoiceNumber: 'INV-002', amount: 200 } },
+  ],
+  baseVariables: { companyName: 'Acme Corp' },
+  attachments: [{
+    filename: 'invoice-{{invoiceNumber}}.pdf',
+    attachmentTemplateId: 'invoice-pdf',
+    baseVariables: { currency: 'USD' },
+    // These fields are pulled from each recipient's variables
+    recipientVariableFields: ['name', 'invoiceNumber', 'amount'],
+    outputFormats: ['pdf'],
+  }],
+  batchName: 'January Invoices',
+});
+```
+
+**Option 2: Using `attachmentOverrides`** - Override attachments per recipient for complete control
+
+```typescript
+const customResult = await formamail.emails.sendBulk({
+  templateId: 'report-email',
+  recipients: [
+    {
+      email: 'c1@example.com',
+      variables: { name: 'Alice' },
+      // Completely override attachments for this recipient
+      attachmentOverrides: [{
+        filename: 'custom-report-alice.pdf',
+        attachmentTemplateId: 'vip-report-pdf',
+        baseVariables: { reportType: 'VIP', discount: 20 },
+        outputFormats: ['pdf'],
+      }],
+    },
+    {
+      email: 'c2@example.com',
+      variables: { name: 'Bob' },
+      // This recipient uses the default attachments (no override)
+    },
+  ],
+  baseVariables: { companyName: 'Acme Corp' },
+  attachments: [{
+    filename: 'standard-report.pdf',
+    attachmentTemplateId: 'standard-report-pdf',
+    outputFormats: ['pdf'],
+  }],
+});
 ```
 
 ### List and Search Emails
@@ -159,7 +255,7 @@ await formamail.webhooks.delete('wh_abc123');
 ### Verify Webhook Signatures
 
 ```typescript
-import { verifyWebhookSignature } from '@formamail/sdk';
+import { verifyWebhookSignature } from 'formamail';
 
 // Express.js example
 app.post('/webhooks/formamail', express.raw({ type: 'application/json' }), (req, res) => {
@@ -216,7 +312,7 @@ const formamail = new Formamail({
 ## Error Handling
 
 ```typescript
-import { Formamail, FormamailError } from '@formamail/sdk';
+import { Formamail, FormamailError } from 'formamail';
 
 try {
   await formamail.emails.send({
@@ -245,7 +341,7 @@ import type {
   Email,
   Template,
   WebhookEvent,
-} from '@formamail/sdk';
+} from 'formamail';
 
 const options: SendEmailOptions = {
   templateId: 'tmpl_123',
@@ -266,8 +362,7 @@ const result: SendEmailResponse = await formamail.emails.send(options);
 ### Emails Resource
 
 - `formamail.emails.send(options)` - Send an email
-- `formamail.emails.sendWithPdf(options)` - Send with PDF attachment
-- `formamail.emails.sendWithExcel(options)` - Send with Excel attachment
+- `formamail.emails.sendWithAttachment(options)` - Send with PDF or Excel attachment
 - `formamail.emails.sendBulk(options)` - Send bulk emails
 - `formamail.emails.get(id)` - Get email by ID
 - `formamail.emails.list(options)` - List/search emails

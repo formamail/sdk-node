@@ -21,46 +21,74 @@ export interface FormamailConfig {
 // Email Types
 // ============================================
 
-export interface SendEmailOptions {
-  /** Template ID to use */
-  templateId: string;
+export interface EmailRecipient {
   /** Recipient email address */
-  to: string;
+  email: string;
   /** Recipient name (optional) */
-  toName?: string;
-  /** Subject line (overrides template default) */
-  subject?: string;
-  /** Sender name (optional) */
+  name?: string;
+}
+
+export type RecipientInput = string | EmailRecipient | (string | EmailRecipient)[];
+
+export interface SendEmailOptions {
+  /** Template ID to use (UUID, shortId like etpl_xxx, or slug) */
+  templateId: string;
+  /**
+   * Recipient(s) - can be:
+   * - A single email string: 'john@example.com'
+   * - An object: { email: 'john@example.com', name: 'John' }
+   * - An array: ['john@example.com', { email: 'jane@example.com', name: 'Jane' }]
+   */
+  to: RecipientInput;
+  /** CC recipient(s) - same format as 'to' */
+  cc?: RecipientInput;
+  /** BCC recipient(s) - same format as 'to' */
+  bcc?: RecipientInput;
+  /** Template version to use ('published' or 'draft', default: 'published') */
+  version?: 'published' | 'draft';
+  /** Sender email address (must be a verified sender address) */
+  senderEmail?: string;
+  /** Sender ID (legacy - prefer senderEmail) */
+  senderId?: string;
+  /** Custom sender name to display in the From field */
   fromName?: string;
-  /** Reply-to email address (optional) */
+  /** Reply-to email address override */
   replyTo?: string;
   /** Template variables for personalization */
   variables?: Record<string, unknown>;
-  /** Track email opens (default: true) */
-  trackOpens?: boolean;
-  /** Track link clicks (default: true) */
-  trackClicks?: boolean;
+  /** Email priority */
+  priority?: 'low' | 'normal' | 'high';
+  /** Schedule send time (ISO 8601 format) */
+  scheduledAt?: string;
+  /** Custom headers */
+  headers?: Record<string, string>;
+  /** Tags for tracking and categorization */
+  tags?: string[];
+  /** Metadata for tracking */
+  metadata?: Record<string, unknown>;
   /** Attachments to include */
   attachments?: Attachment[];
 }
 
-export interface SendBulkEmailOptions {
-  /** Template ID to use */
-  templateId: string;
-  /** List of recipients */
-  recipients: BulkRecipient[];
-  /** Subject line (overrides template default) */
-  subject?: string;
-  /** Sender name (optional) */
-  fromName?: string;
-  /** Reply-to email address (optional) */
-  replyTo?: string;
-  /** Variables applied to all recipients */
-  commonVariables?: Record<string, unknown>;
-  /** Track email opens (default: true) */
-  trackOpens?: boolean;
-  /** Track link clicks (default: true) */
-  trackClicks?: boolean;
+export interface BulkAttachment {
+  /** Attachment filename (can use variables like {{invoiceNumber}}.pdf) */
+  filename: string;
+  /** Content type (e.g., 'application/pdf') */
+  contentType?: string;
+  /** Static base64 content (same for all recipients) */
+  content?: string;
+  /** Static URL (same for all recipients) */
+  url?: string;
+  /** Attachment template ID (for template-generated attachments) */
+  attachmentTemplateId?: string;
+  /** Base variables for attachment template (shared across all recipients) */
+  baseVariables?: Record<string, unknown>;
+  /** Which recipient variable fields to use for this attachment */
+  recipientVariableFields?: string[];
+  /** Output formats to generate (e.g., ['pdf', 'excel']) */
+  outputFormats?: string[];
+  /** Whether this attachment is required (fail email if generation fails) */
+  required?: boolean;
 }
 
 export interface BulkRecipient {
@@ -68,8 +96,45 @@ export interface BulkRecipient {
   email: string;
   /** Recipient name (optional) */
   name?: string;
-  /** Per-recipient variables (override common variables) */
-  variables?: Record<string, unknown>;
+  /** Variables for email template (merged with baseVariables) */
+  variables: Record<string, unknown>;
+  /** Override attachments for this specific recipient */
+  attachmentOverrides?: BulkAttachment[];
+}
+
+export interface SendBulkEmailOptions {
+  /** Template ID to use (UUID, shortId like etpl_xxx, or slug) */
+  templateId: string;
+  /** Template version ('published' or 'draft') */
+  version?: 'published' | 'draft';
+  /** List of recipients with their individual variables (max 1000) */
+  recipients: BulkRecipient[];
+  /** Base variables for email template (shared across all recipients) */
+  baseVariables?: Record<string, unknown>;
+  /** Attachments for all recipients (can have template-generated attachments) */
+  attachments?: BulkAttachment[];
+  /** Sender email address (must be verified) */
+  senderEmail?: string;
+  /** Sender ID (legacy - prefer senderEmail) */
+  senderId?: string;
+  /** Custom sender name */
+  fromName?: string;
+  /** Reply-to email address */
+  replyTo?: string;
+  /** Email priority */
+  priority?: 'low' | 'normal' | 'high';
+  /** Custom headers */
+  headers?: Record<string, string>;
+  /** Tags for tracking and categorization */
+  tags?: string[];
+  /** Metadata for tracking */
+  metadata?: Record<string, unknown>;
+  /** Batch name for tracking */
+  batchName?: string;
+  /** Dry run mode - validate without sending */
+  dryRun?: boolean;
+  /** Schedule send time (ISO 8601 format) */
+  scheduledAt?: string;
 }
 
 export interface Attachment {
@@ -85,21 +150,30 @@ export interface Attachment {
 
 export interface Email {
   id: string;
-  status: EmailStatus;
-  to: string;
-  toName?: string;
-  subject: string;
+  teamId: string;
   templateId: string;
   templateName?: string;
+  subject: string;
+  from: string;
+  /** Recipient email addresses */
+  to: string[];
+  /** CC recipients */
+  cc?: string[];
+  /** BCC recipients */
+  bcc?: string[];
+  status: EmailStatus;
+  providerMessageId?: string;
+  errorMessage?: string;
+  openCount?: number;
+  clickCount?: number;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  scheduledAt?: string;
+  queuedAt?: string;
+  processingAt?: string;
   sentAt?: string;
   deliveredAt?: string;
-  openedAt?: string;
-  clickedAt?: string;
-  bouncedAt?: string;
-  bounceType?: string;
-  bounceReason?: string;
-  messageId?: string;
-  attachments?: EmailAttachment[];
+  failedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -111,32 +185,51 @@ export interface EmailAttachment {
 }
 
 export type EmailStatus =
+  | 'pending'
   | 'queued'
+  | 'processing'
   | 'sent'
   | 'delivered'
-  | 'opened'
-  | 'clicked'
+  | 'failed'
   | 'bounced'
-  | 'failed';
+  | 'complained'
+  | 'rejected'
+  | 'scheduled';
+
+export interface BlockedRecipient {
+  email: string;
+  reason: string;
+  source?: string;
+}
 
 export interface SendEmailResponse {
   id: string;
-  status: string;
-  to: string;
-  subject: string;
-  sentAt: string;
-  messageId: string;
-  attachments?: EmailAttachment[];
+  status: EmailStatus;
+  message: string;
+  providerMessageId?: string;
+  scheduledAt?: string;
+  createdAt: string;
+  /** Warning message if some recipients were blocked */
+  warning?: string;
+  /** Details about blocked recipients */
+  blockedRecipients?: BlockedRecipient[];
 }
 
 export interface SendBulkEmailResponse {
+  /** Unique batch ID for tracking this bulk send */
   batchId: string;
+  /** Batch status */
   status: string;
-  totalRecipients: number;
-  queued: number;
-  sent: number;
-  failed: number;
+  /** Total number of emails queued */
+  totalEmails: number;
+  /** Success message */
+  message: string;
+  /** Timestamp when batch was created */
   createdAt: string;
+  /** Estimated completion time */
+  estimatedCompletionAt?: string;
+  /** Scheduled send time */
+  scheduledAt?: string;
 }
 
 export interface ListEmailsOptions {
