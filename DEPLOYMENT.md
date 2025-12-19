@@ -310,7 +310,7 @@ Update `README.md` with:
 
 - GitHub Issues: Report bugs and feature requests
 - Email: sdk-support@formamail.com
-- Documentation: https://docs.formamail.com/sdk/node
+- Documentation: https://docs.formamail.com/developer-guide
 
 ## Security
 

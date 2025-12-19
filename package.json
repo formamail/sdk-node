@@ -39,7 +39,7 @@
     "type": "git",
     "url": "https://github.com/formamail/sdk-node.git"
   },
-  "homepage": "https://docs.formamail.com/sdk/node",
+  "homepage": "https://docs.formamail.com/developer-guide",
   "bugs": {
     "url": "https://github.com/formamail/sdk-node/issues"
   },
